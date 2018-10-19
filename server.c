@@ -21,16 +21,24 @@ int main(){
 	char		ip[16], mensagem[MAXLINE+1];
 	struct 	sockaddr_in servaddr;
 	bool		server_running = false;
-	FILE		*fp;
+	FILE		*fp, *datarecord;
 
 	//Get IP address and save
 	fp = popen("hostname -I", "r");
 	fgets(ip, 16, fp);
 	ip[strlen(ip) - 1] = ' ';
 
+	/*Create a file to save all data
+	if((datarecord = fopen("data.txt", "r")) == NULL){
+		if((datarecord = fopen("data.txt", "w")) == NULL){
+			printf("Problema no registro\n");
+			exit(1);
+		};
+	}*/
+
 	printf("Servidor:: -> Tentando conexao\n");
 
-	for(server_try = 0; server_try < 2000000; server_try++){
+	for(server_try = 0; server_try < 20000000; server_try++){
 		bzero((char *)&servaddr, sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_addr.s_addr = INADDR_ANY;
@@ -70,6 +78,13 @@ int main(){
 		recv(new_socket, mensagem, sizeof(mensagem), 0);
 
 		printf("[%s] %s", __TIME__, mensagem);
+
+		if((datarecord = fopen("data.txt", "a")) == NULL){
+			printf("Problema no registro\n");
+			exit(1);
+		};
+		fprintf(datarecord, "%s", mensagem);
+		fclose(datarecord);
 
 		close(new_socket);
 	}
