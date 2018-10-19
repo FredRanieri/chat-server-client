@@ -34,7 +34,7 @@ int main(){
 		bzero((char *)&servaddr, sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_addr.s_addr = INADDR_ANY;
-		servaddr.sin_port = htons(port);
+		servaddr.sin_port = htons(SERVERPORT);
 
 		if((socket_server = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 			printf("Servidor:: -> Error na criação do socket!\n");
