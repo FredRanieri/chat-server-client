@@ -15,6 +15,8 @@
 
 typedef enum{false, true} bool;
 
+void save_to_database(char*, FILE*);
+
 int main(){
 	int			socket_server, new_socket, tamanho;
 	long		server_try;
@@ -22,23 +24,20 @@ int main(){
 	struct 	sockaddr_in servaddr;
 	bool		server_running = false;
 	FILE		*fp, *datarecord;
+	time_t	time_now;
+	time (&time_now);
 
 	//Get IP address and save
 	fp = popen("hostname -I", "r");
 	fgets(ip, 16, fp);
 	ip[strlen(ip) - 1] = ' ';
 
-	/*Create a file to save all data
-	if((datarecord = fopen("data.txt", "r")) == NULL){
-		if((datarecord = fopen("data.txt", "w")) == NULL){
-			printf("Problema no registro\n");
-			exit(1);
-		};
-	}*/
-
 	printf("Servidor:: -> Tentando conexao\n");
 
-	for(server_try = 0; server_try < 20000000; server_try++){
+	for(server_try = 1; server_try < 20000000; server_try++){
+		if((server_try % 5000000) == 0)
+			printf("Servidor:: -> Ainda tentando conexao...\n");
+
 		bzero((char *)&servaddr, sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_addr.s_addr = INADDR_ANY;
@@ -67,6 +66,11 @@ int main(){
 	printf("Servidor:: -> PORT = %d\n", (int)SERVERPORT);
 	printf("\n------------------- Chat ------------------\n");
 
+	strcpy(mensagem, "Servidor:: -> INICIADO -> ");
+	strcat(mensagem, ctime(&time_now));
+	strcat(mensagem, "\n");
+	save_to_database(mensagem, datarecord);
+
 	listen(socket_server, MAX_PENDING);
 
 	for(;;){
@@ -78,14 +82,17 @@ int main(){
 		recv(new_socket, mensagem, sizeof(mensagem), 0);
 
 		printf("[%s] %s", __TIME__, mensagem);
-
-		if((datarecord = fopen("data.txt", "a")) == NULL){
-			printf("Problema no registro\n");
-			exit(1);
-		};
-		fprintf(datarecord, "%s", mensagem);
-		fclose(datarecord);
-
+		save_to_database(mensagem, datarecord);
 		close(new_socket);
 	}
+}
+
+void save_to_database(char* mensagem, FILE* datarecord){
+	if((datarecord = fopen("data.txt", "a")) == NULL){
+		printf("Problema no registro\n");
+		exit(1);
+	};
+
+	fprintf(datarecord, "%s", mensagem);
+	fclose(datarecord);
 }
